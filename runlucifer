@@ -1,0 +1,24 @@
+#! /bin/bash
+
+# lucifer doesn't follow exit code conventions
+# returns 1 for complete and 0 for general failure
+# have to detect segfaults manually
+for i in `seq 1 50`
+do
+cd Gen$i
+echo $i
+pwd
+for file in config[0-9]*.py
+do
+lucifer -t 32 -c $file
+# if exitcode ($?) is segfault
+if [[ $? -eq 139 ]] 
+then
+    echo $file "run failed, trying again"
+    lucifer -t 32 -c $file
+fi
+done
+cd ..
+matlab -nodesktop -r "Fitness_Test("$i",60,6);GA("$i");exit"
+rm Gen$i/DataFiles/*
+done
